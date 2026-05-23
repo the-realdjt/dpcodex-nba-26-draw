@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NBA季后赛抽签预测平台 2025-26</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{colors:{nba:{red:'#C9082A',blue:'#1D428A',navy:'#0B1D3A',gold:'#FDB927'}}}}}</script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#f0f2f5;--card-bg:#fff;--text:#1a1a2e;--text-secondary:#555;
+  --border:#e0e0e0;--shadow:0 2px 12px rgba(0,0,0,0.08);
+  --shadow-hover:0 8px 30px rgba(0,0,0,0.15);--nav-bg:rgba(255,255,255,0.92);
+  --playin-bg:#fef9e7;
+}
+.dark{
+  --bg:#0a0e27;--card-bg:#141832;--text:#e0e0e0;--text-secondary:#a0a0b8;
+  --border:#2a2d4a;--shadow:0 2px 12px rgba(0,0,0,0.4);
+  --shadow-hover:0 8px 30px rgba(0,0,0,0.6);--nav-bg:rgba(10,14,39,0.94);
+  --playin-bg:#1a1f0a;
+}
+body{background:var(--bg);color:var(--text);transition:background .3s,color .3s;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans-serif;}
+.navbar{background:var(--nav-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;transition:background .3s;}
+.card{background:var(--card-bg);border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--border);transition:all .3s ease;}
+.card:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px);}
+.btn-primary{background:linear-gradient(135deg,#C9082A,#e63946);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-weight:700;font-size:1rem;cursor:pointer;transition:all .25s;box-shadow:0 4px 15px rgba(201,8,42,0.35);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(201,8,42,0.5);}
+.btn-primary:active{transform:scale(.96);}
+.btn-secondary{background:var(--card-bg);color:var(--text);border:2px solid var(--border);border-radius:10px;padding:10px 22px;font-weight:600;cursor:pointer;transition:all .25s;}
+.btn-secondary:hover{border-color:#C9082A;color:#C9082A;}
+.hero{background:linear-gradient(135deg,#0B1D3A 0%,#1D428A 50%,#C9082A 100%);color:#fff;padding:60px 20px;text-align:center;}
+.hero h1{font-size:2.3rem;font-weight:900;letter-spacing:2px;}
+.team-card{background:var(--card-bg);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;border:1px solid var(--border);transition:all .3s;}
+.team-card:hover{border-color:#C9082A;box-shadow:0 4px 16px rgba(201,8,42,0.18);}
+.team-card .seed{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff;flex-shrink:0;}
+.seed-east{background:#1D428A;}.seed-west{background:#C9082A;}
+.seed-playin{background:#FDB927;color:#1a1a2e!important;}.seed-locked{background:#28a745;}
+.bracket-container{display:flex;gap:6px;overflow-x:auto;padding:16px 4px 24px;justify-content:center;align-items:stretch;}
+.bracket-round{display:flex;flex-direction:column;justify-content:space-around;min-width:170px;max-width:200px;}
+.bracket-round-label{text-align:center;font-weight:800;font-size:.72rem;color:var(--text-secondary);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;}
+.bracket-matchup{background:var(--card-bg);border-radius:10px;border:2px solid var(--border);overflow:hidden;margin:8px 0;transition:all .3s;position:relative;}
+.bracket-matchup.winner-decided{border-color:#FDB927;}
+.bracket-slot{display:flex;align-items:center;gap:8px;padding:9px 10px;font-size:.8rem;font-weight:600;border-bottom:1px solid var(--border);transition:all .25s;cursor:pointer;}
+.bracket-slot:hover{background:rgba(253,185,39,0.08);}
+.bracket-slot:last-child{border-bottom:none;}
+.bracket-slot.winner{background:rgba(253,185,39,0.18);color:#FDB927;font-weight:800;}
+.bracket-slot .slot-logo{width:26px;height:26px;object-fit:contain;flex-shrink:0;}
+.playin-card{background:var(--playin-bg);border:2px dashed #FDB927;border-radius:12px;padding:16px;margin:8px 0;}
+.playin-card h4{color:#FDB927;font-weight:800;margin-bottom:8px;}
+.playin-label{font-size:.7rem;color:var(--text-secondary);padding:4px 8px;margin-top:4px;background:rgba(253,185,39,0.08);border-radius:4px;}
+.bracket-connector{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:28px;flex-shrink:0;color:var(--text-secondary);font-size:1.2rem;user-select:none;}
+@keyframes slotSpin{0%,100%{background:var(--card-bg);}50%{background:rgba(201,8,42,0.12);}}
+.anim-spin{animation:slotSpin .3s ease-in-out;}
+@keyframes popIn{0%{transform:scale(.9);opacity:0;}60%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}
+.anim-pop{animation:popIn .4s ease-out;}
+@keyframes pulse-gold{0%,100%{box-shadow:0 0 0 0 rgba(253,185,39,0.4);}50%{box-shadow:0 0 0 12px rgba(253,185,39,0);}}
+.pulse-gold{animation:pulse-gold 1.8s infinite;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.hidden{display:none;}
+.modal-content{background:var(--card-bg);border-radius:16px;padding:28px 32px;max-width:560px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:popIn .3s ease-out;}
+.modal-wide{max-width:98vw!important;width:98%!important;padding:20px!important;}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1D428A;color:#fff;padding:12px 28px;border-radius:30px;font-weight:700;z-index:300;box-shadow:0 8px 30px rgba(29,66,138,0.4);animation:popIn .3s ease-out;transition:opacity .3s;}
+.toast.hidden{opacity:0;pointer-events:none;}
+.stats-table th,.stats-table td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.stats-table th{font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;}
+.stats-table td{font-size:.85rem;font-weight:500;}
+.win-pct-bar{height:6px;border-radius:3px;background:linear-gradient(90deg,#C9082A,#1D428A);min-width:4px;}
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:250;animation:confettiFall 2s ease-out forwards;}
+@keyframes confettiFall{0%{transform:translateY(-100px) rotate(0deg);opacity:1;}100%{transform:translateY(105vh) rotate(720deg);opacity:0;}}
+::-webkit-scrollbar{height:6px;width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+/* Champion Celebration */
+.celeb-overlay{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;animation:celebFadeIn .5s ease-out;}
+.celeb-overlay::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.9);z-index:-1;backdrop-filter:blur(10px);}
+.celeb-overlay.hidden{display:none;}
+@keyframes celebFadeIn{0%{opacity:0;}100%{opacity:1;}}
+.celeb-card{text-align:center;position:relative;z-index:5;animation:celebPop .7s cubic-bezier(0.175,0.885,0.32,1.275);max-width:90vw;}
+@keyframes celebPop{0%{transform:scale(0.2) rotate(-5deg);opacity:0;}60%{transform:scale(1.06) rotate(1deg);}100%{transform:scale(1) rotate(0);opacity:1;}}
+.celeb-card .celeb-trophy{font-size:7rem;display:block;animation:celebFloat 1s ease-out infinite alternate;filter:drop-shadow(0 0 30px rgba(253,185,39,0.7));}
+@keyframes celebFloat{0%{transform:translateY(0) scale(1);}100%{transform:translateY(-10px) scale(1.04);}}
+.celeb-card .celeb-logo{width:110px;height:110px;object-fit:contain;margin:8px auto;filter:drop-shadow(0 0 25px rgba(253,185,39,0.7));}
+.celeb-card .celeb-name-zh{font-size:2.5rem;font-weight:900;color:#FDB927;text-shadow:0 0 40px rgba(253,185,39,0.6),0 0 80px rgba(253,185,39,0.3);letter-spacing:6px;}
+.celeb-card .celeb-name-en{font-size:1.3rem;font-weight:700;color:#fff;opacity:0.9;letter-spacing:4px;text-transform:uppercase;margin-top:2px;}
+.celeb-card .celeb-title{font-size:.85rem;color:#FDB927;opacity:0.65;letter-spacing:8px;text-transform:uppercase;margin-bottom:6px;}
+.celeb-close{position:absolute;top:24px;right:28px;z-index:10;font-size:2.2rem;color:#fff;cursor:pointer;opacity:0.5;transition:opacity .3s;}
+.celeb-close:hover{opacity:1;}
+@keyframes goldenRibbonL{0%{transform:translateX(-130vw) rotate(-30deg);opacity:0;}15%{opacity:0.9;}85%{opacity:0.9;}100%{transform:translateX(130vw) rotate(30deg);opacity:0;}}
+@keyframes goldenRibbonR{0%{transform:translateX(130vw) rotate(30deg);opacity:0;}15%{opacity:0.9;}85%{opacity:0.9;}100%{transform:translateX(-130vw) rotate(-30deg);opacity:0;}}
+.golden-particle{position:fixed;pointer-events:none;z-index:4;border-radius:50%;animation:goldenFall linear forwards;}
+@keyframes goldenFall{0%{transform:translateY(-10vh) rotate(0deg) scale(1);opacity:1;}100%{transform:translateY(110vh) rotate(720deg) scale(0.3);opacity:0;}}
+.golden-spark{position:fixed;pointer-events:none;z-index:6;width:5px;height:5px;background:#FDB927;border-radius:50%;box-shadow:0 0 8px 3px rgba(253,185,39,0.9);animation:sparkFloat 2.5s ease-out forwards;}
+@keyframes sparkFloat{0%{transform:translate(0,0) scale(1);opacity:1;}100%{transform:translate(var(--sx),var(--sy)) scale(0);opacity:0;}}
+/* Export */
+.export-wrap{background:#fff;padding:40px 30px;border-radius:8px;min-width:fit-content;display:flex;align-items:stretch;justify-content:center;gap:0;}
+.dark .export-wrap{background:#141832;}
+.export-col{display:flex;flex-direction:column;justify-content:space-around;min-width:130px;max-width:150px;}
+.export-col-label{text-align:center;font-weight:800;font-size:.65rem;color:#888;margin-bottom:6px;text-transform:uppercase;}
+.export-game{background:#fafafa;border:1.5px solid #ddd;border-radius:6px;overflow:hidden;margin:12px 0;}
+.dark .export-game{background:#1a1f3a;border-color:#2a2d4a;}
+.export-game .exp-slot{display:flex;align-items:center;gap:4px;padding:5px 6px;font-size:.65rem;font-weight:600;border-bottom:1px solid #eee;min-height:30px;}
+.dark .export-game .exp-slot{border-color:#2a2d4a;}
+.export-game .exp-slot:last-child{border-bottom:none;}
+.export-game .exp-slot.win{background:rgba(253,185,39,0.2);color:#b8860b;}
+.dark .export-game .exp-slot.win{color:#FDB927;}
+.export-game .exp-logo{width:20px;height:20px;object-fit:contain;flex-shrink:0;}
+.export-connector{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:22px;flex-shrink:0;}
+.export-finals{border:3px solid #FDB927;border-radius:12px;padding:16px 14px;text-align:center;background:linear-gradient(135deg,#fffef5,#fff8e1);min-width:140px;align-self:center;margin:0 8px;}
+.dark .export-finals{background:linear-gradient(135deg,#1a1f0a,#1f1a00);}
+.export-finals h3{font-size:.85rem;font-weight:900;color:#b8860b;margin-bottom:6px;}
+.dark .export-finals h3{color:#FDB927;}
+.lang-btn{background:var(--card-bg);color:var(--text);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .2s;}
+.lang-btn:hover{border-color:#C9082A;color:#C9082A;}
+.lang-btn.active{background:#C9082A;color:#fff;border-color:#C9082A;}
+@media(max-width:900px){
+  .hero h1{font-size:1.3rem;}
+  .bracket-container{flex-wrap:wrap;justify-content:center;gap:4px;}
+  .bracket-round{min-width:120px;max-width:145px;}
+  .bracket-connector{min-width:14px;font-size:.8rem;}
+  .bracket-slot{padding:6px 7px;font-size:.65rem;gap:4px;}
+  .bracket-slot .slot-logo{width:18px;height:18px;}
+  .celeb-card .celeb-trophy{font-size:4rem;}
+  .celeb-card .celeb-name-zh{font-size:1.6rem;}
+  .celeb-card .celeb-logo{width:80px;height:80px;}
+}
+@media(max-width:640px){
+  .bracket-round{min-width:100px;max-width:115px;}
+  .bracket-round-label{font-size:.52rem;}
+  .bracket-slot{padding:4px 5px;font-size:.58rem;}
+  .bracket-connector{min-width:6px;font-size:.6rem;}
+}
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<nav class="navbar px-4 py-3 flex items-center justify-between flex-wrap gap-2">
+<div class="flex items-center gap-2 sm:gap-3">
+  <span class="text-2xl sm:text-3xl">🏀</span>
+  <span class="text-lg sm:text-xl font-extrabold tracking-tight" style="color:#C9082A;" data-i18n="nav.nba">NBA</span>
+  <span class="text-sm sm:text-base font-bold" style="color:#1D428A;" data-i18n="nav.title">季后赛预测 2025-26</span>
+</div>
+<div class="flex items-center gap-2">
+  <button class="lang-btn active" onclick="setLang('zh')">中文</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+  <button onclick="showRules()" class="btn-secondary text-xs sm:text-sm !py-2 !px-3" data-i18n="nav.rules">📋 规则</button>
+  <button id="themeToggle" onclick="toggleTheme()" class="btn-secondary text-xs sm:text-sm !py-2 !px-3">
+    <span id="themeIcon">🌙</span> <span id="themeLabel" data-i18n="nav.dark">暗色</span>
+  </button>
+</div>
+</nav>
+
+<section class="hero">
+<h1 data-i18n="hero.title">🏆 NBA季后赛抽签预测平台</h1>
+<p class="mt-2 text-sm sm:text-lg opacity-90" data-i18n="hero.sub">2025-26赛季 · 附加赛+季后赛完整对阵 · 冠军之路预测</p>
+<div class="mt-5 flex justify-center gap-3 flex-wrap">
+  <button onclick="scrollTo('playin-section')" class="btn-primary text-base sm:text-lg" data-i18n="hero.start">🎯 开始预测</button>
+  <button onclick="scrollTo('teams-section')" class="text-white border-2 border-white/40 rounded-xl px-5 py-2.5 font-bold hover:bg-white/15 transition text-sm" data-i18n="hero.view">查看排名</button>
+</div>
+</section>
+
+<main class="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-4 py-6 sm:py-8 space-y-8">
+
+<section id="teams-section">
+<h2 class="text-xl sm:text-2xl font-extrabold mb-4 flex items-center gap-2"><span>📊</span> <span data-i18n="teams.title">2025-26常规赛排名</span> <span class="text-xs font-normal" style="color:var(--text-secondary);">(ESPN)</span></h2>
+<div class="grid md:grid-cols-2 gap-4">
+  <div class="card p-4"><h3 class="text-lg font-bold mb-3 flex items-center gap-2" style="color:#1D428A;" data-i18n="teams.east">⬆️ 东部联盟</h3><div id="eastTeams" class="space-y-2"></div></div>
+  <div class="card p-4"><h3 class="text-lg font-bold mb-3 flex items-center gap-2" style="color:#C9082A;" data-i18n="teams.west">⬇️ 西部联盟</h3><div id="westTeams" class="space-y-2"></div></div>
+</div>
+<p class="text-xs mt-2" style="color:var(--text-secondary);" data-i18n="teams.legend">🟢 1-6名直通季后赛 | 🟡 7-10名参加附加赛</p>
+</section>
+
+<section id="playin-section">
+<h2 class="text-xl sm:text-2xl font-extrabold mb-4 flex items-center gap-2"><span>🎯</span> <span data-i18n="playin.title">附加赛 PLAY-IN TOURNAMENT</span></h2>
+<p class="text-xs sm:text-sm mb-4" style="color:var(--text-secondary);" data-i18n="playin.desc">7-8名胜者→7号种子；7-8败者 vs 9-10胜者→8号种子</p>
+<div class="grid md:grid-cols-2 gap-4">
+  <div class="playin-card"><h4 data-i18n="playin.east">⬆️ 东部附加赛</h4><div id="eastPlayin" class="space-y-2"></div></div>
+  <div class="playin-card"><h4 data-i18n="playin.west">⬇️ 西部附加赛</h4><div id="westPlayin" class="space-y-2"></div></div>
+</div>
+<div class="text-center mt-4">
+  <button id="btnSimPlayin" onclick="simulatePlayin()" class="btn-primary text-sm" data-i18n="playin.btn">🎯 模拟附加赛</button>
+  <button onclick="resetPlayin()" class="btn-secondary text-sm ml-2" data-i18n="playin.reset">🔄 重置附加赛</button>
+</div>
+</section>
+
+<section class="card p-5 text-center">
+<h2 class="text-xl sm:text-2xl font-extrabold mb-2" data-i18n="po.title">🏆 季后赛对阵模拟</h2>
+<p class="text-xs sm:text-sm mb-5" style="color:var(--text-secondary);" data-i18n="po.desc">1v8, 4v5, 3v6, 2v7种子对阵 · 高种子加权胜率</p>
+<div class="flex justify-center gap-2 flex-wrap">
+  <button id="btnSimulate" onclick="simulatePlayoffs()" class="btn-primary text-base sm:text-lg px-6" data-i18n="po.btn">🔥 模拟完整季后赛</button>
+  <button onclick="resetPlayoffs()" class="btn-secondary text-sm" data-i18n="po.reset">🔄 重置</button>
+  <button onclick="savePrediction()" class="btn-secondary text-sm" data-i18n="po.save">💾 保存</button>
+  <button onclick="exportImage()" class="btn-secondary text-sm" data-i18n="po.export">📸 导出对阵图</button>
+</div>
+<div id="drawStatus" class="mt-4 text-xs sm:text-sm font-medium" style="color:var(--text-secondary);"></div>
+</section>
+
+<section id="bracket-section">
+<h2 class="text-xl sm:text-2xl font-extrabold mb-1 flex items-center gap-2"><span>🏀</span> <span data-i18n="bracket.title">季后赛对阵图</span></h2>
+<p class="text-xs sm:text-sm mb-4" style="color:var(--text-secondary);" data-i18n="bracket.hint">点击你想晋级的球队 · 横向滚动查看完整对阵</p>
+<div class="card p-3 mb-4"><h3 class="text-lg font-bold mb-2 text-center" style="color:#C9082A;" data-i18n="bracket.west">⬇️ 西部联盟</h3><div class="bracket-container" id="westBracket"></div></div>
+<div class="card p-3 mb-4 text-center pulse-gold" style="max-width:500px;margin:0 auto 24px;"><h3 class="text-lg font-extrabold mb-2" style="color:#FDB927;" data-i18n="bracket.finals">🏆 NBA总决赛</h3><div id="finalsBracket" class="flex items-center justify-center gap-4 flex-wrap"></div></div>
+<div class="card p-3"><h3 class="text-lg font-bold mb-2 text-center" style="color:#1D428A;" data-i18n="bracket.east">⬆️ 东部联盟</h3><div class="bracket-container" id="eastBracket"></div></div>
+</section>
+
+<section>
+<h2 class="text-xl sm:text-2xl font-extrabold mb-4 flex items-center gap-2"><span>📈</span> <span data-i18n="stats.title">战绩排行</span></h2>
+<div class="grid md:grid-cols-2 gap-4">
+  <div class="card p-4 overflow-x-auto"><h3 class="text-lg font-bold mb-3" style="color:#1D428A;" data-i18n="stats.east">东部</h3><table class="stats-table w-full" id="eastStats"></table></div>
+  <div class="card p-4 overflow-x-auto"><h3 class="text-lg font-bold mb-3" style="color:#C9082A;" data-i18n="stats.west">西部</h3><table class="stats-table w-full" id="westStats"></table></div>
+</div>
+</section>
+
+</main>
+
+<footer class="text-center py-5 text-xs" style="color:var(--text-secondary);border-top:1px solid var(--border);">
+<p data-i18n="footer.line1">🏀 NBA季后赛抽签预测平台 · 2025-26赛季 · 仅供娱乐</p>
+<p class="mt-1" data-i18n="footer.line2">数据来源 ESPN · Built with HTML5 + Tailwind CSS</p>
+</footer>
+
+<!-- Rules Modal -->
+<div class="modal-overlay hidden" id="rulesModal">
+<div class="modal-content"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-extrabold" data-i18n="rules.title">📋 NBA季后赛规则</h3><button onclick="closeRules()" class="text-2xl cursor-pointer" style="color:var(--text-secondary);">&times;</button></div><div class="space-y-2 text-xs leading-relaxed" data-i18n="rules.body"></div><div class="mt-5 text-right"><button onclick="closeRules()" class="btn-primary text-sm" data-i18n="rules.ok">知道了</button></div></div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay hidden" id="exportModal">
+<div class="modal-content modal-wide" style="background:var(--bg);"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-extrabold" data-i18n="export.title">📸 对阵图预览</h3><div class="flex gap-2"><button onclick="downloadExportImage()" class="btn-primary text-sm" data-i18n="export.download">💾 下载PNG</button><button onclick="closeExport()" class="btn-secondary text-sm" data-i18n="export.close">关闭</button></div></div><div style="overflow-x:auto;background:var(--bg);border-radius:8px;"><div id="exportBracket" class="export-wrap"></div></div></div>
+</div>
+
+<!-- Celebration Overlay -->
+<div class="celeb-overlay hidden" id="celebrationOverlay" onclick="closeCelebration()">
+<span class="celeb-close">&times;</span>
+<div class="celeb-card" onclick="event.stopPropagation()">
+  <span class="celeb-trophy">🏆</span>
+  <img id="celebLogo" class="celeb-logo" src="" alt="">
+  <div class="celeb-title">NBA CHAMPIONS</div>
+  <div class="celeb-name-zh" id="celebNameZh"></div>
+  <div class="celeb-name-en" id="celebNameEn"></div>
+</div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+// ==================== I18N ====================
+var I18N={
+  zh:{
+    'nav.nba':'NBA','nav.title':'季后赛预测 2025-26','nav.rules':'📋 规则','nav.dark':'暗色',
+    'hero.title':'🏆 NBA季后赛抽签预测平台','hero.sub':'2025-26赛季 · 附加赛+季后赛完整对阵 · 冠军之路预测','hero.start':'🎯 开始预测','hero.view':'查看排名',
+    'teams.title':'2025-26常规赛排名','teams.east':'⬆️ 东部联盟','teams.west':'⬇️ 西部联盟','teams.legend':'🟢 1-6名直通季后赛 | 🟡 7-10名参加附加赛',
+    'playin.title':'🎯 附加赛 PLAY-IN TOURNAMENT','playin.desc':'7-8名胜者→7号种子；7-8败者 vs 9-10胜者→8号种子','playin.east':'⬆️ 东部附加赛','playin.west':'⬇️ 西部附加赛','playin.btn':'🎯 模拟附加赛','playin.reset':'🔄 重置附加赛',
+    'po.title':'🏆 季后赛对阵模拟','po.desc':'1v8, 4v5, 3v6, 2v7种子对阵 · 高种子加权胜率','po.btn':'🔥 模拟完整季后赛','po.reset':'🔄 重置','po.save':'💾 保存','po.export':'📸 导出对阵图',
+    'bracket.title':'季后赛对阵图','bracket.hint':'点击你想晋级的球队 · 横向滚动查看完整对阵','bracket.west':'⬇️ 西部联盟','bracket.east':'⬆️ 东部联盟','bracket.finals':'🏆 NBA总决赛',
+    'stats.title':'战绩排行','stats.east':'东部','stats.west':'西部',
+    'footer.line1':'🏀 NBA季后赛抽签预测平台 · 2025-26赛季 · 仅供娱乐','footer.line2':'数据来源 ESPN · Built with HTML5 + Tailwind CSS',
+    'rules.title':'📋 NBA季后赛规则','rules.ok':'知道了',
+    'rules.body':'<p><strong>【附加赛 Play-In】</strong></p><p>· 第7 vs 第8 → 胜者=7号种子</p><p>· 第9 vs 第10 → 胜者晋级</p><p>· 7/8败者 vs 9/10胜者 → 胜者=8号种子</p><p class="mt-2"><strong>【季后赛】</strong></p><p>· 首轮：1v8, 4v5, 3v6, 2v7</p><p>· 分区半决赛 → 分区决赛 → 总决赛</p><p class="mt-2"><strong>【模拟规则】</strong></p><p>· 附加赛&季后赛基于种子差值加权随机</p><p>· 种子差≥4: ~82%胜率</p><p class="italic opacity-70 mt-3">※ 仅供娱乐，实际以NBA官方为准。</p>',
+    'export.title':'📸 对阵图预览','export.download':'💾 下载PNG','export.close':'关闭',
+    'status.empty':'点击"模拟附加赛"→"模拟完整季后赛"开始','status.count':'已预测 {0} 组对阵','status.champ':'🏆 当前总冠军：{0} ({1})',
+    'sim.done':'✅ 模拟完成！点击对阵卡片可手动修改','playin.done':'✅ 附加赛完成！7号和8号种子已确定','playin.reset.done':'🔄 附加赛已重置','po.reset.done':'🔄 季后赛已重置',
+    'toggle.done':'已选择晋级球队 ✅','toggle.champ':'已切换总冠军 🏆','saved':'💾 已保存到本地缓存','noresult':'⚠️ 暂无预测结果',
+    'exporting':'📸 正在生成图片...','export.done':'📸 对阵图已下载！','export.fail':'⚠️ 导出失败','export.loading':'⚠️ 图片库加载中',
+    'playin.label78':'🏀 第7 vs 第8 → 7号种子','playin.label910':'🏀 第9 vs 第10 → 胜者晋级','playin.labelfinal':'败者 vs 胜者 → 8号种子','playin.finalgame':'🏀 争夺8号种子','playin.result7':'7号: ','playin.result8':'8号: ',
+    'finals.wait':'等待分区决赛结果…','finals.champ':'{0} 总冠军！','bracket.tbd':'待定',
+    'export.playin':'附加赛','export.r1':'首轮','export.sf':'半决赛','export.cf':'分区决赛','export.finals':'🏆 NBA总决赛','export.west':'西部','export.east':'东部','export.winner':'🏆 {0} 夺得总冠军！'
+  },
+  en:{
+    'nav.nba':'NBA','nav.title':'Playoff Predictor 2025-26','nav.rules':'📋 Rules','nav.dark':'Dark',
+    'hero.title':'🏆 NBA Playoff Prediction','hero.sub':'2025-26 Season · Play-In + Playoffs · Championship Road','hero.start':'🎯 Start','hero.view':'Standings',
+    'teams.title':'2025-26 Standings','teams.east':'⬆️ Eastern Conference','teams.west':'⬇️ Western Conference','teams.legend':'🟢 1-6: Playoffs | 🟡 7-10: Play-In',
+    'playin.title':'🎯 PLAY-IN TOURNAMENT','playin.desc':'7v8 winner→#7 seed；7/8 loser vs 9/10 winner→#8 seed','playin.east':'⬆️ East Play-In','playin.west':'⬇️ West Play-In','playin.btn':'🎯 Simulate Play-In','playin.reset':'🔄 Reset',
+    'po.title':'🏆 Playoff Simulation','po.desc':'1v8,4v5,3v6,2v7 · Weighted by seed','po.btn':'🔥 Simulate Playoffs','po.reset':'🔄 Reset','po.save':'💾 Save','po.export':'📸 Export',
+    'bracket.title':'Playoff Bracket','bracket.hint':'Click the team you want to advance · Scroll','bracket.west':'⬇️ Western','bracket.east':'⬆️ Eastern','bracket.finals':'🏆 NBA FINALS',
+    'stats.title':'Standings','stats.east':'East','stats.west':'West',
+    'footer.line1':'🏀 NBA Playoff Predictor · 2025-26 · Entertainment Only','footer.line2':'Data: ESPN · HTML5 + Tailwind CSS',
+    'rules.title':'📋 NBA Playoff Rules','rules.ok':'Got it',
+    'rules.body':'<p><strong>[Play-In]</strong></p><p>· #7 vs #8 → #7 seed</p><p>· #9 vs #10 → Winner advances</p><p>· 7/8 loser vs 9/10 winner → #8 seed</p><p class="mt-2"><strong>[Playoffs]</strong></p><p>· First Round: 1v8, 4v5, 3v6, 2v7</p><p>· Semis → Conf. Finals → NBA Finals</p><p class="mt-2"><strong>[Simulation]</strong></p><p>· Weighted random by seed diff</p><p>· Diff ≥4: ~82%</p><p class="italic opacity-70 mt-3">※ For entertainment only.</p>',
+    'export.title':'📸 Bracket Preview','export.download':'💾 Download PNG','export.close':'Close',
+    'status.empty':'Click "Simulate Play-In" → "Simulate Playoffs"','status.count':'{0} matchups predicted','status.champ':'🏆 Champion: {0} ({1})',
+    'sim.done':'✅ Done! Click teams to adjust','playin.done':'✅ Play-In done! #7/#8 seeds set','playin.reset.done':'🔄 Play-In reset','po.reset.done':'🔄 Playoffs reset',
+    'toggle.done':'Team selected ✅','toggle.champ':'Champion toggled 🏆','saved':'💾 Saved','noresult':'⚠️ No results','exporting':'📸 Generating...','export.done':'📸 Downloaded!','export.fail':'⚠️ Failed','export.loading':'⚠️ Loading...',
+    'playin.label78':'🏀 #7 vs #8 → #7 Seed','playin.label910':'🏀 #9 vs #10 → Advances','playin.labelfinal':'Loser vs Winner → #8 Seed','playin.finalgame':'🏀 Battle for #8','playin.result7':'#7: ','playin.result8':'#8: ',
+    'finals.wait':'Waiting for Conf. Finals…','finals.champ':'{0} Champions!','bracket.tbd':'TBD',
+    'export.playin':'Play-In','export.r1':'First Round','export.sf':'Semifinals','export.cf':'Conf. Finals','export.finals':'🏆 NBA FINALS','export.west':'WEST','export.east':'EAST','export.winner':'🏆 {0} Wins!'
+  }
+};
+var currentLang='zh';
+function t(key){var args=Array.prototype.slice.call(arguments,1);var s=(I18N[currentLang]||{})[key]||key;args.forEach(function(a,i){s=s.replace('{'+i+'}',a);});return s;}
+function setLang(lang){
+  currentLang=lang;
+  document.querySelectorAll('[data-i18n]').forEach(function(el){var k=el.getAttribute('data-i18n');if(k==='rules.body'){el.innerHTML=t(k);return;}el.textContent=t(k);});
+  document.querySelectorAll('.lang-btn').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.lang-btn').forEach(function(b){if(b.textContent.trim()===(lang==='zh'?'中文':'EN'))b.classList.add('active');});
+  renderAllPlayin();renderAllBrackets();updateStatus();
+  localStorage.setItem('nba_lang',lang);
+}
+function initLang(){setLang(localStorage.getItem('nba_lang')||'zh');}
+
+// ==================== 球队数据 ====================
+var TEAMS={
+  east:[
+    {id:'det',name:'活塞',nameEn:'Pistons',full:'Detroit Pistons',abbr:'DET',seed:1,w:60,l:22,color:'#C8102E'},
+    {id:'bos',name:'凯尔特人',nameEn:'Celtics',full:'Boston Celtics',abbr:'BOS',seed:2,w:56,l:26,color:'#007A33'},
+    {id:'nyk',name:'尼克斯',nameEn:'Knicks',full:'New York Knicks',abbr:'NY',seed:3,w:53,l:29,color:'#F58426'},
+    {id:'cle',name:'骑士',nameEn:'Cavaliers',full:'Cleveland Cavaliers',abbr:'CLE',seed:4,w:52,l:30,color:'#860038'},
+    {id:'atl',name:'老鹰',nameEn:'Hawks',full:'Atlanta Hawks',abbr:'ATL',seed:5,w:46,l:36,color:'#E03A3E'},
+    {id:'tor',name:'猛龙',nameEn:'Raptors',full:'Toronto Raptors',abbr:'TOR',seed:6,w:46,l:36,color:'#CE1141'},
+    {id:'phi',name:'76人',nameEn:'76ers',full:'Philadelphia 76ers',abbr:'PHI',seed:7,w:45,l:37,color:'#006BB6'},
+    {id:'orl',name:'魔术',nameEn:'Magic',full:'Orlando Magic',abbr:'ORL',seed:8,w:45,l:37,color:'#0077C0'},
+    {id:'cha',name:'黄蜂',nameEn:'Hornets',full:'Charlotte Hornets',abbr:'CHA',seed:9,w:44,l:38,color:'#00788C'},
+    {id:'mia',name:'热火',nameEn:'Heat',full:'Miami Heat',abbr:'MIA',seed:10,w:43,l:39,color:'#98002E'}
+  ],
+  west:[
+    {id:'okc',name:'雷霆',nameEn:'Thunder',full:'Oklahoma City Thunder',abbr:'OKC',seed:1,w:64,l:18,color:'#007AC1'},
+    {id:'sas',name:'马刺',nameEn:'Spurs',full:'San Antonio Spurs',abbr:'SA',seed:2,w:62,l:20,color:'#000000'},
+    {id:'den',name:'掘金',nameEn:'Nuggets',full:'Denver Nuggets',abbr:'DEN',seed:3,w:54,l:28,color:'#0E2240'},
+    {id:'lal',name:'湖人',nameEn:'Lakers',full:'Los Angeles Lakers',abbr:'LAL',seed:4,w:53,l:29,color:'#552583'},
+    {id:'hou',name:'火箭',nameEn:'Rockets',full:'Houston Rockets',abbr:'HOU',seed:5,w:52,l:30,color:'#CE1141'},
+    {id:'min',name:'森林狼',nameEn:'Timberwolves',full:'Minnesota Timberwolves',abbr:'MIN',seed:6,w:49,l:33,color:'#0C2340'},
+    {id:'phx',name:'太阳',nameEn:'Suns',full:'Phoenix Suns',abbr:'PHX',seed:7,w:45,l:37,color:'#1D1160'},
+    {id:'por',name:'开拓者',nameEn:'Trail Blazers',full:'Portland Trail Blazers',abbr:'POR',seed:8,w:42,l:40,color:'#E03A3E'},
+    {id:'lac',name:'快船',nameEn:'Clippers',full:'LA Clippers',abbr:'LAC',seed:9,w:42,l:40,color:'#1D428A'},
+    {id:'gsw',name:'勇士',nameEn:'Warriors',full:'Golden State Warriors',abbr:'GS',seed:10,w:37,l:45,color:'#1D428A'}
+  ]
+};
+function tmName(t){return currentLang==='en'?t.nameEn:t.name;}
+function findById(id){return TEAMS.east.find(function(t){return t.id===id;})||TEAMS.west.find(function(t){return t.id===id;})||null;}
+function logo(abbr){return'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/'+abbr+'.png&h=120&w=120';}
+
+// ==================== 附加赛 ====================
+var playinState={east:{game78:{teamA:null,teamB:null,winner:null},game910:{teamA:null,teamB:null,winner:null},gameFinal:{teamA:null,teamB:null,winner:null}},west:{game78:{teamA:null,teamB:null,winner:null},game910:{teamA:null,teamB:null,winner:null},gameFinal:{teamA:null,teamB:null,winner:null}}};
+function initPlayin(){['east','west'].forEach(function(conf){var ts=TEAMS[conf];playinState[conf]={game78:{teamA:ts.find(function(x){return x.seed===7;}),teamB:ts.find(function(x){return x.seed===8;}),winner:null},game910:{teamA:ts.find(function(x){return x.seed===9;}),teamB:ts.find(function(x){return x.seed===10;}),winner:null},gameFinal:{teamA:null,teamB:null,winner:null}};});}
+function getPlayinResult(conf){var p=playinState[conf],s7=p.game78.winner||null,loser=p.game78.winner?(p.game78.winner.id===p.game78.teamA.id?p.game78.teamB:p.game78.teamA):null;return{seed7:s7,seed8:p.gameFinal.winner||null,loser78:loser,w910:p.game910.winner};}
+
+// ==================== 季后赛 ====================
+var bracketState={east:[[{},{},{},{}],[{},{}],[{}]],west:[[{},{},{},{}],[{},{}],[{}]],finals:{}};
+var ROUND_ZH=['首轮','分区半决赛','分区决赛'],ROUND_EN=['FIRST ROUND','CONF. SEMIS','CONF. FINALS'];
+var MATCHUPS=[[0,7],[3,4],[2,5],[1,6]];
+function initBracket(){['east','west'].forEach(function(conf){var r=getPlayinResult(conf),top6=TEAMS[conf].filter(function(t){return t.seed<=6;}),ord=top6.concat([r.seed7,r.seed8]);MATCHUPS.forEach(function(p,i){bracketState[conf][0][i]={teamA:ord[p[0]]||null,teamB:ord[p[1]]||null,winner:null};});bracketState[conf][1]=[{teamA:null,teamB:null,winner:null},{teamA:null,teamB:null,winner:null}];bracketState[conf][2]=[{teamA:null,teamB:null,winner:null}];});bracketState.finals={teamA:null,teamB:null,winner:null};}
+function wr(a,b){var d=b.seed-a.seed,p;if(d>=4)p=.82;else if(d>=2)p=.70;else if(d>=0)p=.58;else if(d>=-1)p=.45;else if(d>=-3)p=.30;else p=.18;return Math.random()<p?a:b;}
+
+// ==================== 渲染 ====================
+function teamCard(t){var pct=(t.w/(t.w+t.l)*100).toFixed(1),sc=t.seed<=6?'seed-locked':'seed-playin';return'<div class="team-card"><span class="seed '+sc+'">'+t.seed+'</span><img src="'+logo(t.abbr)+'" class="w-9 h-9 object-contain" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"><span class="w-9 h-9 rounded-full items-center justify-center text-white text-xs font-bold flex-shrink-0 hidden" style="background:'+t.color+';display:none;">'+t.abbr+'</span><div class="flex-1 min-w-0"><div class="font-bold text-sm truncate">'+tmName(t)+'</div><div class="text-xs truncate" style="color:var(--text-secondary);">'+t.full+'</div></div><div class="text-right flex-shrink-0"><div class="font-bold text-sm">'+t.w+'-'+t.l+'</div><div class="text-xs" style="color:var(--text-secondary);">'+pct+'%</div></div></div>';}
+function renderTeams(){document.getElementById('eastTeams').innerHTML=TEAMS.east.map(teamCard).join('');document.getElementById('westTeams').innerHTML=TEAMS.west.map(teamCard).join('');}
+
+// --- Play-in slots: each team clickable ---
+function pSlot(tm,isW,conf,key,slot){if(!tm)return'<div class="bracket-slot" style="justify-content:center;color:var(--text-secondary);font-size:.7rem;">'+t('bracket.tbd')+'</div>';return'<div class="bracket-slot'+(isW?' winner':'')+'" onclick="setPlayinWinner(\''+conf+'\',\''+key+'\',\''+slot+'\');event.stopPropagation()"><img src="'+logo(tm.abbr)+'" class="slot-logo" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"><span class="slot-seed" style="background:'+tm.color+';display:none;">'+tm.seed+'</span><span class="flex-1 truncate">'+tmName(tm)+' (#'+tm.seed+')</span></div>';}
+function pGame(g,label,key,conf){var w=g.winner;return'<div class="bracket-matchup'+(w?' winner-decided':'')+'"><div class="text-xs text-center font-bold py-1" style="background:rgba(253,185,39,0.18);color:#FDB927;">'+label+'</div>'+pSlot(g.teamA,w&&w.id===g.teamA.id,conf,key,'A')+pSlot(g.teamB,w&&w.id===g.teamB.id,conf,key,'B')+'</div>';}
+function renderPlayinPanel(conf){var p=playinState[conf],r=getPlayinResult(conf),h='';h+=pGame(p.game78,t('playin.label78'),'game78',conf);h+=pGame(p.game910,t('playin.label910'),'game910',conf);h+='<div class="playin-label">'+t('playin.labelfinal')+'</div>';h+=pGame(p.gameFinal,t('playin.finalgame'),'gameFinal',conf);if(r.seed7||r.seed8){h+='<div class="text-xs font-bold mt-2" style="color:#FDB927;">';if(r.seed7)h+=t('playin.result7')+tmName(r.seed7)+' &nbsp;';if(r.seed8)h+=t('playin.result8')+tmName(r.seed8);h+='</div>';}return h;}
+function renderAllPlayin(){document.getElementById('eastPlayin').innerHTML=renderPlayinPanel('east');document.getElementById('westPlayin').innerHTML=renderPlayinPanel('west');}
+
+// --- Bracket slots: each team clickable ---
+function bSlot(tm,isW,conf,round,idx,slot){if(!tm)return'<div class="bracket-slot" style="justify-content:center;color:var(--text-secondary);font-size:.7rem;">'+t('bracket.tbd')+'</div>';return'<div class="bracket-slot'+(isW?' winner':'')+'" onclick="setMatchupWinner(\''+conf+'\','+round+','+idx+',\''+slot+'\');event.stopPropagation()"><img src="'+logo(tm.abbr)+'" class="slot-logo" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"><span class="slot-seed" style="background:'+tm.color+';display:none;">'+tm.seed+'</span><span class="flex-1 truncate">'+tmName(tm)+'</span></div>';}
+function bMatchup(m,ri,mi,conf){var aW=m.winner&&m.winner.id===(m.teamA||{}).id,bW=m.winner&&m.winner.id===(m.teamB||{}).id;return'<div class="bracket-matchup'+(m.winner?' winner-decided':'')+' anim-pop">'+bSlot(m.teamA,aW,conf,ri,mi,'A')+bSlot(m.teamB,bW,conf,ri,mi,'B')+'</div>';}
+function renderConfBracket(conf){var br=bracketState[conf],h='',rn=currentLang==='en'?ROUND_EN:ROUND_ZH;for(var r=0;r<3;r++){h+='<div class="bracket-round"><div class="bracket-round-label">'+rn[r]+'</div>';var ms=br[r];if(r===0){ms.forEach(function(m,i){h+=bMatchup(m,r,i,conf);});}else if(r===1){h+='<div style="flex:0.6;"></div>';ms.forEach(function(m,i){h+=bMatchup(m,r,i,conf);h+='<div style="flex:0.6;"></div>';});}else{h+='<div style="flex:3;"></div>'+bMatchup(ms[0],r,0,conf)+'<div style="flex:3;"></div>';}h+='</div>';if(r<2)h+='<div class="bracket-connector">▶</div>';}return h;}
+function renderFinals(){var f=bracketState.finals;if(!f.teamA||!f.teamB)return'<p class="text-sm py-4" style="color:var(--text-secondary);">'+t('finals.wait')+'</p>';var cA=TEAMS.west.find(function(t){return t.id===f.teamA.id;})?'W':'E',cB=TEAMS.west.find(function(t){return t.id===f.teamB.id;})?'W':'E',aW=f.winner&&f.winner.id===f.teamA.id,bW=f.winner&&f.winner.id===f.teamB.id,h='<div class="bracket-matchup'+(f.winner?' winner-decided':'')+'"><div class="bracket-slot'+(aW?' winner':'')+'" onclick="setFinalsWinner(\'A\');event.stopPropagation()"><img src="'+logo(f.teamA.abbr)+'" class="slot-logo" onerror="this.style.display=\'none\'"><span class="font-bold truncate">'+tmName(f.teamA)+'</span><span class="text-xs px-2 py-0.5 rounded-full text-white flex-shrink-0" style="background:'+(cA==='W'?'#C9082A':'#1D428A')+'">'+cA+'</span></div><div class="text-center text-xs font-extrabold py-1" style="color:var(--text-secondary);">VS</div><div class="bracket-slot'+(bW?' winner':'')+'" onclick="setFinalsWinner(\'B\');event.stopPropagation()"><img src="'+logo(f.teamB.abbr)+'" class="slot-logo" onerror="this.style.display=\'none\'"><span class="font-bold truncate">'+tmName(f.teamB)+'</span><span class="text-xs px-2 py-0.5 rounded-full text-white flex-shrink-0" style="background:'+(cB==='W'?'#C9082A':'#1D428A')+'">'+cB+'</span></div></div>';if(f.winner)h+='<div class="mt-2 text-lg font-extrabold" style="color:#FDB927;">🏆 '+t('finals.champ',tmName(f.winner))+'</div>';return h;}
+function renderAllBrackets(){document.getElementById('westBracket').innerHTML=renderConfBracket('west');document.getElementById('eastBracket').innerHTML=renderConfBracket('east');document.getElementById('finalsBracket').innerHTML=renderFinals();updateStatus();}
+
+// ==================== 手动设置晋级（点击哪个队就晋级哪个） ====================
+function setMatchupWinner(conf,round,idx,slot){
+  var m=bracketState[conf][round][idx];
+  if(!m.teamA||!m.teamB)return;
+  m.winner = slot==='A' ? m.teamA : m.teamB;
+  cascadeUpdate(conf,round,idx);updateFinals();renderAllBrackets();
+  showToast(tmName(m.winner)+' 晋级！');
+}
+
+function setPlayinWinner(conf,key,slot){
+  var g=playinState[conf][key];
+  if(!g.teamA||!g.teamB)return;
+  g.winner = slot==='A' ? g.teamA : g.teamB;
+  if(key==='game78'||key==='game910'){
+    var p=playinState[conf],loser=p.game78.winner?(p.game78.winner.id===p.game78.teamA.id?p.game78.teamB:p.game78.teamA):null;
+    p.gameFinal.teamA=p.game78.winner?loser:null;
+    p.gameFinal.teamB=p.game910.winner;
+    if(!p.gameFinal.teamA||!p.gameFinal.teamB){p.gameFinal.winner=null;}
+    else{var gw=p.gameFinal.winner;if(gw&&gw.id!==p.gameFinal.teamA.id&&gw.id!==p.gameFinal.teamB.id)p.gameFinal.winner=null;}
+  }
+  renderAllPlayin();initBracket();renderAllBrackets();
+  showToast(tmName(g.winner)+' 晋级！');
+}
+
+function setFinalsWinner(slot){
+  var f=bracketState.finals;
+  if(!f.teamA||!f.teamB)return;
+  f.winner = slot==='A' ? f.teamA : f.teamB;
+  renderAllBrackets();
+  showToast(tmName(f.winner)+' 🏆 总冠军！');
+  showCelebration(f.winner);
+}
+
+// ==================== 模拟 ====================
+function simulatePlayin(){var btn=document.getElementById('btnSimPlayin');btn.disabled=true;btn.textContent='⏳ ...';initPlayin();['east','west'].forEach(function(conf){var p=playinState[conf];p.game78.winner=wr(p.game78.teamA,p.game78.teamB);p.game910.winner=wr(p.game910.teamA,p.game910.teamB);var loser=p.game78.winner.id===p.game78.teamA.id?p.game78.teamB:p.game78.teamA;p.gameFinal.teamA=loser;p.gameFinal.teamB=p.game910.winner;p.gameFinal.winner=wr(loser,p.game910.winner);});renderAllPlayin();initBracket();renderAllBrackets();btn.disabled=false;btn.textContent=currentLang==='en'?'🎯 Re-simulate':'🎯 重新模拟附加赛';showToast(t('playin.done'));}
+function resetPlayin(){initPlayin();renderAllPlayin();initBracket();renderAllBrackets();showToast(t('playin.reset.done'));}
+
+function simulatePlayoffs(){var btn=document.getElementById('btnSimulate');btn.disabled=true;btn.textContent='⏳ ...';initBracket();renderAllBrackets();var delay=200;setTimeout(function(){for(var r=0;r<3;r++){(function(round){setTimeout(function(){['east','west'].forEach(function(conf){var br=bracketState[conf];if(round===0){br[round].forEach(function(m){if(m.teamA&&m.teamB)m.winner=wr(m.teamA,m.teamB);});}else{for(var i=0;i<br[round].length;i++){br[round][i].teamA=(br[round-1][i*2]||{}).winner||null;br[round][i].teamB=(br[round-1][i*2+1]||{}).winner||null;if(br[round][i].teamA&&br[round][i].teamB)br[round][i].winner=wr(br[round][i].teamA,br[round][i].teamB);}}});renderAllBrackets();animateM();if(round===2){var eC=bracketState.east[2][0].winner||null,wC=bracketState.west[2][0].winner||null;bracketState.finals={teamA:wC,teamB:eC,winner:(wC&&eC)?wr(wC,eC):null};renderAllBrackets();var champ=bracketState.finals.winner;if(champ){showCelebration(champ);}document.getElementById('drawStatus').textContent=t('sim.done');btn.disabled=false;btn.textContent=currentLang==='en'?'🏆 Re-simulate':'🏆 重新模拟';}},delay);delay+=(round===0?800:550);})(r);}},200);}
+function animateM(){document.querySelectorAll('.bracket-matchup').forEach(function(el){el.classList.add('anim-spin');setTimeout(function(){el.classList.remove('anim-spin');},300);});}
+function cascadeUpdate(conf,round,idx){if(round>=2)return;var nr=round+1,ni=Math.floor(idx/2),nm=bracketState[conf][nr][ni];if(idx%2===0)nm.teamA=bracketState[conf][round][idx].winner;else nm.teamB=bracketState[conf][round][idx].winner;if(nm.teamA&&nm.teamB){if(nm.winner&&nm.winner.id!==nm.teamA.id&&nm.winner.id!==nm.teamB.id)nm.winner=null;}else{nm.winner=null;}}
+function updateFinals(){var eC=(bracketState.east[2][0]||{}).winner||null,wC=(bracketState.west[2][0]||{}).winner||null;bracketState.finals.teamA=wC;bracketState.finals.teamB=eC;if(wC&&eC){var fw=bracketState.finals.winner;if(fw&&fw.id!==wC.id&&fw.id!==eC.id)bracketState.finals.winner=null;}else{bracketState.finals.winner=null;}}
+function resetPlayoffs(){initBracket();renderAllBrackets();updateStatus();showToast(t('po.reset.done'));}
+function updateStatus(){var f=bracketState.finals,c=countDecided();if(f.winner)document.getElementById('drawStatus').textContent=t('status.champ',tmName(f.winner),f.winner.full);else if(c>0)document.getElementById('drawStatus').textContent=t('status.count',c);else document.getElementById('drawStatus').textContent=t('status.empty');}
+function countDecided(){var c=0;['east','west'].forEach(function(conf){bracketState[conf].forEach(function(r){r.forEach(function(m){if(m.winner)c++;});});});if(bracketState.finals.winner)c++;return c;}
+
+// ==================== 保存 & 加载 ====================
+function savePrediction(){var c=countDecided();if(c===0){showToast(t('noresult'));return;}localStorage.setItem('nba_playoff_v2',JSON.stringify({playin:playinState,bracket:bracketState,ts:new Date().toISOString()}));showToast(t('saved'));}
+function loadPrediction(){var raw=localStorage.getItem('nba_playoff_v2');if(!raw)return false;try{var data=JSON.parse(raw);['east','west'].forEach(function(conf){(data.bracket[conf]||[]).forEach(function(round){round.forEach(function(m){if(m.teamA&&typeof m.teamA==='object')m.teamA=findById(m.teamA.id)||m.teamA;if(m.teamB&&typeof m.teamB==='object')m.teamB=findById(m.teamB.id)||m.teamB;if(m.winner&&typeof m.winner==='object')m.winner=findById(m.winner.id)||m.winner;});});var p=(data.playin||{})[conf]||{};['game78','game910','gameFinal'].forEach(function(k){var g=p[k];if(!g)return;if(g.teamA&&typeof g.teamA==='object')g.teamA=findById(g.teamA.id)||g.teamA;if(g.teamB&&typeof g.teamB==='object')g.teamB=findById(g.teamB.id)||g.teamB;if(g.winner&&typeof g.winner==='object')g.winner=findById(g.winner.id)||g.winner;});});var f=data.bracket.finals||{};if(f.teamA&&typeof f.teamA==='object')f.teamA=findById(f.teamA.id)||f.teamA;if(f.teamB&&typeof f.teamB==='object')f.teamB=findById(f.teamB.id)||f.teamB;if(f.winner&&typeof f.winner==='object')f.winner=findById(f.winner.id)||f.winner;playinState=data.playin||playinState;bracketState=data.bracket;return true;}catch(e){return false;}}
+
+// ==================== 导出对阵图 ====================
+function exportImage(){document.getElementById('exportBracket').innerHTML=buildExportBracket();document.getElementById('exportModal').classList.remove('hidden');}
+function closeExport(){document.getElementById('exportModal').classList.add('hidden');}
+document.getElementById('exportModal').addEventListener('click',function(e){if(e.target===this)closeExport();});
+function buildExportBracket(){var h='',rn=currentLang==='en'?['First Round','Semifinals','Conf. Finals']:['首轮','半决赛','分区决赛'];h+='<div class="export-col"><div class="export-col-label">'+t('export.west')+' '+t('export.playin')+'</div>';var wp=playinState.west;h+=expGame(wp.game78.teamA,wp.game78.teamB,wp.game78.winner);h+='<div style="flex:0.3;"></div>';h+=expGame(wp.game910.teamA,wp.game910.teamB,wp.game910.winner);h+='<div style="flex:0.3;"></div>';h+=expGame(wp.gameFinal.teamA,wp.gameFinal.teamB,wp.gameFinal.winner);h+='</div><div class="export-connector">▶</div>';for(var r=0;r<3;r++){h+='<div class="export-col"><div class="export-col-label">'+t('export.west')+' '+rn[r]+'</div>';var ms=bracketState.west[r];if(r===0){ms.forEach(function(m){h+=expGame(m.teamA,m.teamB,m.winner);});}else if(r===1){h+='<div style="flex:0.6;"></div>';ms.forEach(function(m){h+=expGame(m.teamA,m.teamB,m.winner);h+='<div style="flex:0.6;"></div>';});}else{h+='<div style="flex:3;"></div>'+expGame(ms[0].teamA,ms[0].teamB,ms[0].winner)+'<div style="flex:3;"></div>';}h+='</div>';if(r<2)h+='<div class="export-connector">▶</div>';}h+='<div class="export-finals"><h3>'+t('export.finals')+'</h3>';var f=bracketState.finals;if(f.teamA&&f.teamB){var cA=TEAMS.west.find(function(t){return t.id===f.teamA.id;})?'W':'E',cB=TEAMS.west.find(function(t){return t.id===f.teamB.id;})?'W':'E';h+='<div class="exp-slot'+(f.winner&&f.winner.id===f.teamA.id?' win':'')+'" style="justify-content:center;"><img src="'+logo(f.teamA.abbr)+'" class="exp-logo" onerror="this.style.display=\'none\'"><b>'+tmName(f.teamA)+'</b> <span style="font-size:.55rem;background:'+(cA==='W'?'#C9082A':'#1D428A')+';color:#fff;padding:1px 5px;border-radius:10px;">'+cA+'</span></div>';h+='<div style="text-align:center;font-weight:800;font-size:.7rem;color:#888;padding:2px 0;">VS</div>';h+='<div class="exp-slot'+(f.winner&&f.winner.id===f.teamB.id?' win':'')+'" style="justify-content:center;"><img src="'+logo(f.teamB.abbr)+'" class="exp-logo" onerror="this.style.display=\'none\'"><b>'+tmName(f.teamB)+'</b> <span style="font-size:.55rem;background:'+(cB==='W'?'#C9082A':'#1D428A')+';color:#fff;padding:1px 5px;border-radius:10px;">'+cB+'</span></div>';if(f.winner)h+='<div style="margin-top:6px;font-weight:900;font-size:.7rem;color:#b8860b;">🏆 '+tmName(f.winner)+'</div>';}else{h+='<div style="font-size:.65rem;color:#888;padding:8px;">TBD</div>';}h+='</div>';for(var rr=2;rr>=0;rr--){if(rr<2)h+='<div class="export-connector">▶</div>';h+='<div class="export-col"><div class="export-col-label">'+t('export.east')+' '+rn[rr]+'</div>';var ems=bracketState.east[rr];if(rr===0){ems.forEach(function(m){h+=expGame(m.teamA,m.teamB,m.winner);});}else if(rr===1){h+='<div style="flex:0.6;"></div>';ems.forEach(function(m){h+=expGame(m.teamA,m.teamB,m.winner);h+='<div style="flex:0.6;"></div>';});}else{h+='<div style="flex:3;"></div>'+expGame(ems[0].teamA,ems[0].teamB,ems[0].winner)+'<div style="flex:3;"></div>';}h+='</div>';}h+='<div class="export-connector">▶</div><div class="export-col"><div class="export-col-label">'+t('export.east')+' '+t('export.playin')+'</div>';var ep=playinState.east;h+=expGame(ep.game78.teamA,ep.game78.teamB,ep.game78.winner);h+='<div style="flex:0.3;"></div>';h+=expGame(ep.game910.teamA,ep.game910.teamB,ep.game910.winner);h+='<div style="flex:0.3;"></div>';h+=expGame(ep.gameFinal.teamA,ep.gameFinal.teamB,ep.gameFinal.winner);h+='</div>';return h;}
+function expGame(ta,tb,winner){var aW=winner&&winner.id===(ta||{}).id,bW=winner&&winner.id===(tb||{}).id,h='<div class="export-game"><div class="exp-slot'+(aW?' win':'')+'">';if(ta)h+='<img src="'+logo(ta.abbr)+'" class="exp-logo" onerror="this.style.display=\'none\'"><span class="truncate">'+tmName(ta)+'</span><span style="font-size:.5rem;color:#999;">#'+ta.seed+'</span>';else h+='<span style="color:#999;font-size:.55rem;">TBD</span>';h+='</div><div class="exp-slot'+(bW?' win':'')+'">';if(tb)h+='<img src="'+logo(tb.abbr)+'" class="exp-logo" onerror="this.style.display=\'none\'"><span class="truncate">'+tmName(tb)+'</span><span style="font-size:.5rem;color:#999;">#'+tb.seed+'</span>';else h+='<span style="color:#999;font-size:.55rem;">TBD</span>';h+='</div></div>';return h;}
+function downloadExportImage(){if(typeof html2canvas==='undefined'){showToast(t('export.loading'));return;}showToast(t('exporting'));try{html2canvas(document.getElementById('exportBracket'),{backgroundColor:getComputedStyle(document.body).backgroundColor,scale:3,useCORS:true,allowTaint:true,logging:false}).then(function(canvas){var a=document.createElement('a');a.download='NBA_Playoff_Bracket_2025-26.png';a.href=canvas.toDataURL('image/png');a.click();showToast(t('export.done'));});}catch(e){showToast(t('export.fail'));}}
+
+// ==================== 冠军庆祝 ====================
+function showCelebration(team){if(!team)return;var o=document.getElementById('celebrationOverlay');document.getElementById('celebLogo').src=logo(team.abbr);document.getElementById('celebLogo').onerror=function(){this.style.display='none';};document.getElementById('celebNameZh').textContent=team.name;document.getElementById('celebNameEn').textContent=team.full;o.classList.remove('hidden');spawnGoldenEffects();setTimeout(function(){o.classList.add('hidden');},7000);}
+function closeCelebration(){document.getElementById('celebrationOverlay').classList.add('hidden');}
+function spawnGoldenEffects(){for(var i=0;i<10;i++){setTimeout(function(){var r=document.createElement('div');var l=Math.random()>0.5;r.style.cssText='position:fixed;pointer-events:none;z-index:2;height:'+(Math.random()*50+25)+'px;width:'+(Math.random()*250+200)+'px;background:linear-gradient(90deg,transparent,rgba(253,185,39,'+(Math.random()*0.35+0.25)+'),rgba(255,215,0,'+(Math.random()*0.25+0.15)+'),rgba(253,185,39,'+(Math.random()*0.35+0.25)+'),transparent);border-radius:3px;top:'+(Math.random()*80+10)+'%;animation:'+(l?'goldenRibbonL':'goldenRibbonR')+' '+(Math.random()*2+2.5)+'s ease-out forwards;';document.body.appendChild(r);setTimeout(function(){r.remove();},4500);},i*250);}for(var j=0;j<100;j++){setTimeout(function(){var p=document.createElement('div');p.className='golden-particle';var s=Math.random()*10+3;var colors=['#FDB927','#FFD700','#FFF8DC','#FFC107','#FFE082','#FFF176'];p.style.cssText='left:'+Math.random()*100+'%;top:-30px;width:'+s+'px;height:'+s+'px;background:'+colors[Math.floor(Math.random()*colors.length)]+';animation-duration:'+(Math.random()*3.5+2)+'s;box-shadow:0 0 '+(s*2)+'px rgba(253,185,39,0.6);';document.body.appendChild(p);setTimeout(function(){p.remove();},6000);},j*25);}for(var k=0;k<60;k++){setTimeout(function(){var s=document.createElement('div');s.className='golden-spark';var a=Math.random()*Math.PI*2,d=Math.random()*250+100;s.style.setProperty('--sx',Math.cos(a)*d+'px');s.style.setProperty('--sy',Math.sin(a)*d-60+'px');s.style.left='50%';s.style.top='50%';s.style.animationDuration=(Math.random()*2+1.5)+'s';document.body.appendChild(s);setTimeout(function(){s.remove();},4000);},k*30);}}
+
+// ==================== 主题 ====================
+function toggleTheme(){var isDark=document.documentElement.classList.toggle('dark');document.getElementById('themeIcon').textContent=isDark?'☀️':'🌙';document.getElementById('themeLabel').textContent=isDark?(currentLang==='en'?'Light':'亮色'):(currentLang==='en'?'Dark':'暗色');localStorage.setItem('nba_theme',isDark?'dark':'light');}
+function initTheme(){var s=localStorage.getItem('nba_theme');if(s==='dark'||(!s&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark');document.getElementById('themeIcon').textContent='☀️';document.getElementById('themeLabel').textContent=currentLang==='en'?'Light':'亮色';}}
+
+// ==================== 弹窗 ====================
+function showRules(){document.getElementById('rulesModal').classList.remove('hidden');}
+function closeRules(){document.getElementById('rulesModal').classList.add('hidden');}
+document.getElementById('rulesModal').addEventListener('click',function(e){if(e.target===this)closeRules();});
+var _tt;function showToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.remove('hidden');clearTimeout(_tt);_tt=setTimeout(function(){el.classList.add('hidden');},2200);}
+function scrollTo(id){document.getElementById(id).scrollIntoView({behavior:'smooth'});}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeRules();closeExport();closeCelebration();}if(e.ctrlKey&&e.key==='s'){e.preventDefault();savePrediction();}});
+
+function renderStats(){var h='<thead><tr><th>#</th><th>Team</th><th>W-L</th><th>%</th><th></th></tr></thead>';function tbl(conf){return TEAMS[conf].map(function(t){var pct=(t.w/(t.w+t.l)*100).toFixed(1),bw=Math.max(Math.round(t.w/82*100),4);return'<tr><td><span class="font-extrabold">'+t.seed+'</span></td><td><div class="flex items-center gap-2"><img src="'+logo(t.abbr)+'" class="w-5 h-5 object-contain" onerror="this.style.display=\'none\'"><span>'+tmName(t)+'</span></div></td><td>'+t.w+'-'+t.l+'</td><td>'+pct+'%</td><td><div class="win-pct-bar" style="width:'+bw+'px;"></div></td></tr>';}).join('');}document.getElementById('eastStats').innerHTML=h+'<tbody>'+tbl('east')+'</tbody>';document.getElementById('westStats').innerHTML=h+'<tbody>'+tbl('west')+'</tbody>';}
+
+function init(){initLang();initTheme();initPlayin();var loaded=loadPrediction();if(!loaded)initBracket();renderTeams();renderStats();renderAllPlayin();renderAllBrackets();updateStatus();console.log('🏀 NBA Playoff Predictor 2025-26 ready');}
+init();
+</script>
+</body>
+</html>
